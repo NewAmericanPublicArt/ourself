@@ -1,11 +1,11 @@
 Manufacturer,Manu #,Distributor,Dist #,Qty,Unit price,Extended price,Have,To order,Description
 Adafruit,1609,Adafruit,1609,1,,,1,0,1/2 sized breadboard
 Adafruit,1608,Adafruit,1608,1,,,1,0,1/4 sized breadboard
-Bud Industries,PNX-91440,Amazon,,1,,,1,0,Back panel for enclosure
+Bud Industries,NBX-10990,Amazon,,1,,,1,0,Back panel for enclosure
 Sandisk,SDSDQUAN-008G-G4A,Amazon,,2,,,2,0,8 GB SD card: http://www.amazon.com/SanDisk-MicroSDHC-Standard-Packaging-SDSDQUAN-008G-G4A/dp/B00M55C0VU/
 ,,Amazon,,3,,,3,0,Micro USB cable: http://www.amazon.com/Anker-PowerLine-Premium-Motorola-Smartphones/dp/B019PV2I3G/
 Amazonbasics,,Amazon,,1,,,1,0,3.5 mm audio cable: www.amazon.com/AmazonBasics-3-5mm-Stereo-Audio-Cable/dp/B00NO73IN2/
-Bud Industries,BT-2740,Digikey,377-1547-ND,1,,,1,0,Blue polycarbonate enclosure
+Bud Industries,NBE-10573,Amazon,,1,,,1,0,Fiberglass enclosure
 Switchcraft,EN3P3FX,Digikey,SC260-ND,4,,,4,0,Female 3-pin IP67 connector for sensors and audio
 Switchcraft,EN3C3MX,Digikey,SC252-ND,4,,,4,0,Male 3-pin IP67 connector for sensors and audio
 Switchcraft,EN3P2MX,Digikey,SC1568-ND,1,,,1,0,Male 2-pin IP67 connector for 5V

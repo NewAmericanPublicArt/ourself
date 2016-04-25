@@ -45,7 +45,7 @@ void setup() {
   Serial.begin(9600);
   AudioMemory(8);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.5);
+  sgtl5000_1.volume(1.0);
   SPI.setMOSI(7);
   SPI.setSCK(14);
   if (!(SD.begin(10))) {
@@ -65,8 +65,8 @@ void setup() {
 
 void loop() {
   if (playSdWav1.isPlaying() == false) {
-    Serial.println("Start playing 1");
-    playSdWav1.play("jbond.wav");
+    Serial.println("Start playing background atmosphere");
+    playSdWav1.play("atmos.wav");
     delay(10); // wait for library to parse WAV info
   }
 /*  if (playSdWav2.isPlaying() == false) {
@@ -84,16 +84,18 @@ void loop() {
     mixer2.gain(0, quiet);
     mixer2.gain(2, loud);
     if (playSdWav3.isPlaying() == false) {
-      Serial.println("Start playing 3");
-      playSdWav3.play("law.wav");
+      Serial.println("Start playing interviews");
+      playSdWav3.play("01.wav");
       delay(10); // wait for library to parse WAV info
     }
   } else {
-    if (playSdWav3.isPlaying() == false) {
-      mixer1.gain(0, loud);
-      mixer1.gain(2, quiet);
-      mixer2.gain(0, loud);
-      mixer2.gain(2, quiet);
+    if (playSdWav3.isPlaying() == true) {
+      Serial.println("Stop interviews");
+      playSdWav3.stop();
     }
+    mixer1.gain(0, loud);
+    mixer1.gain(2, quiet);
+    mixer2.gain(0, loud);
+    mixer2.gain(2, quiet);
   }
 }

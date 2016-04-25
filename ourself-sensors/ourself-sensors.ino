@@ -16,6 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+/* Load cell code heavily based on HX711 code written by Bogde: https://github.com/bogde/HX711
+ * Redistributed under GPL license in accordance with Bogde's license (GPL)
+ * at https://github.com/bogde/HX711/blob/master/LICENSE */
+
 #include <DmxSimple.h>
 
 #define TRUE  1
@@ -42,6 +46,14 @@
 #define APPROACH_TIMEOUT 30000
 #define LEAVING_TIMEOUT  30000
 
+#define LOAD_THRESHOLD 300000
+
+// SLOPPY GLOBAL VARS USED FOR LOAD CELL CODE
+
+int PD_SCK  = 22;
+int DOUT    = 14;
+int GAIN = 2; // from set_gain()
+
 void setLightBar(int address, int r, int g, int b) {
     DmxSimple.write(address, 255);   // master dimmer, 0-255 -> dim-bright
     DmxSimple.write(address + 1, 0); // flash rate: 0 = no flash, 1-255 -> long-short delay between flashes
@@ -56,12 +68,16 @@ int motionDetected(void) {
     if(digitalRead(PIR_L_IN) | digitalRead(PIR_R_IN)) {
         return TRUE;
     } else {
-        return FALSE;
+        return TRUE;
+        //return FALSE; // BREAKING THIS FOR TESTING
     }
 }
 
-int personBetweenMirrors(void) {
-    if(analogRead(USONIC_IN)) { // will get more complicated with 4 sensors
+bool personBetweenMirrors() {
+    long loadCellReading;
+    loadCellReading = readLoadCell();
+    Serial.println(loadCellReading);
+    if(loadCellReading > LOAD_THRESHOLD) {
         return TRUE;
     } else {
         return FALSE;
@@ -69,14 +85,19 @@ int personBetweenMirrors(void) {
 }
 
 void updateStateMachine(void) {
+    static int state = STATE_BASELINE;
     static unsigned long approach_timer;
     static unsigned long leaving_timer;
 
+    Serial.print("STATE: ");
+    Serial.print(state);
+    Serial.print("\n");
+
     switch(state) {
         case STATE_BASELINE:
-            // set edge light to low
+            setLightBar(THE_ONLY_BAR_WE_HAVE, 50, 50, 50); // set edge light to low
             // set ambient sound to very low
-            // stop any story
+            digitalWrite(USONIC_OUT, LOW); // stop any story
             if(motionDetected()) {
                 state = STATE_APPROACH;
                 approach_timer = millis();
@@ -88,14 +109,14 @@ void updateStateMachine(void) {
             // single pulse of edge light, then down to medium
             if(personBetweenMirrors()) {
                 state = STATE_STORY;
-            } else if(approach_timer - millis() > APPROACH_TIMEOUT) {
+            }/* else if(approach_timer - millis() > APPROACH_TIMEOUT) {
                 state = STATE_BASELINE;
-            }
+            }*/
             break;
         case STATE_STORY:
-            // play start sound, then play next story as long as we're in this state
+            digitalWrite(USONIC_OUT, HIGH); // play start sound, then play next story as long as we're in this state
             // set ambient sound to low
-            // set edge light to high
+            setLightBar(THE_ONLY_BAR_WE_HAVE, 255, 255, 255); // set edge light to high
             if(!personBetweenMirrors()) {
                 if(motionDetected()) {
                     state = STATE_LEAVING;
@@ -121,21 +142,74 @@ void updateStateMachine(void) {
     }
 }
 
+bool is_ready() {
+    return digitalRead(DOUT) == LOW;
+}
+
+long readLoadCell() {
+    // wait for the chip to become ready
+    while (!is_ready());
+
+    unsigned long value = 0;
+    byte data[3] = { 0 };
+    byte filler = 0x00;
+
+    // pulse the clock pin 24 times to read the data
+    data[2] = shiftIn(DOUT, PD_SCK, MSBFIRST);
+    data[1] = shiftIn(DOUT, PD_SCK, MSBFIRST);
+    data[0] = shiftIn(DOUT, PD_SCK, MSBFIRST);
+
+    // set the channel and the gain factor for the next reading using the clock pin
+    for (unsigned int i = 0; i < GAIN; i++) {
+        digitalWrite(PD_SCK, HIGH);
+        digitalWrite(PD_SCK, LOW);
+    }
+
+    // Datasheet indicates the value is returned as a two's complement value
+    // Flip all the bits
+    data[2] = ~data[2];
+    data[1] = ~data[1];
+    data[0] = ~data[0];
+
+    // Replicate the most significant bit to pad out a 32-bit signed integer
+    if ( data[2] & 0x80 ) {
+        filler = 0xFF;
+    } else if ((0x7F == data[2]) && (0xFF == data[1]) && (0xFF == data[0])) {
+        filler = 0xFF;
+    } else {
+        filler = 0x00;
+    }
+
+    // Construct a 32-bit signed integer
+    value = ( static_cast<unsigned long>(filler) << 24
+            | static_cast<unsigned long>(data[2]) << 16
+            | static_cast<unsigned long>(data[1]) << 8
+            | static_cast<unsigned long>(data[0]) );
+
+    // ... and add 1
+    return static_cast<long>(++value);
+}
+
+void initLoadCell() {
+    pinMode(PD_SCK, OUTPUT);
+    pinMode(DOUT, INPUT);
+    // act as if gain is 32
+    digitalWrite(PD_SCK, LOW); // from set_gain()
+}
+
 void setup() {
     pinMode(DMX_OUT, OUTPUT);    // send DMX
     pinMode(PIR_R_OUT, OUTPUT);  // announce PIR R signal
     pinMode(USONIC_OUT, OUTPUT); // announce USONIC signal
     pinMode(PIR_L_OUT, OUTPUT);  // announce PIR L signal
-    pinMode(PIR_L_IN, INPUT);    // read PIR L
-    pinMode(PIR_R_IN, INPUT);    // read PIR R
+//    pinMode(PIR_L_IN, INPUT);    // read PIR L
+//    pinMode(PIR_R_IN, INPUT);    // read PIR R
     Serial.begin(115200);
     DmxSimple.usePin(6);
     DmxSimple.maxChannel(100);
-
-    // need to turn on back light here
+    initLoadCell();
 }
 
 void loop() {
-    static int state = STATE_BASELINE;
     updateStateMachine();
 }

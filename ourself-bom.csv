@@ -1,28 +1,44 @@
-Manufacturer,Manu #,Distributor,Dist #,Qty,Unit price,Extended price,Have,To order,Description
-Adafruit,1609,Adafruit,1609,1,,,1,0,1/2 sized breadboard
-Adafruit,1608,Adafruit,1608,1,,,1,0,1/4 sized breadboard
-Bud Industries,NBX-10990,Amazon,,1,,,1,0,Back panel for enclosure
-Sandisk,SDSDQUAN-008G-G4A,Amazon,,2,,,2,0,8 GB SD card: http://www.amazon.com/SanDisk-MicroSDHC-Standard-Packaging-SDSDQUAN-008G-G4A/dp/B00M55C0VU/
-,,Amazon,,3,,,3,0,Micro USB cable: http://www.amazon.com/Anker-PowerLine-Premium-Motorola-Smartphones/dp/B019PV2I3G/
-Amazonbasics,,Amazon,,1,,,1,0,3.5 mm audio cable: www.amazon.com/AmazonBasics-3-5mm-Stereo-Audio-Cable/dp/B00NO73IN2/
-Bud Industries,NBE-10573,Amazon,,1,,,1,0,Fiberglass enclosure
-Switchcraft,EN3P3FX,Digikey,SC260-ND,4,,,4,0,Female 3-pin IP67 connector for sensors and audio
-Switchcraft,EN3C3MX,Digikey,SC252-ND,4,,,4,0,Male 3-pin IP67 connector for sensors and audio
-Switchcraft,EN3P2MX,Digikey,SC1568-ND,1,,,1,0,Male 2-pin IP67 connector for 5V
-Bulgin,PX0842/B,Digikey,708-1021-ND,3,,,3,0,USB passthrough connector
-Bulgin,PX0733,Digikey,708-1180-ND,3,,,3,0,USB connector cap
-Maxim,MAX3072EEPA+,Digikey,MAX3072EEPA+-ND,1,,,1,0,RS-485 transceiver
-OST,OSTVN03A150,Digikey,ED10562-ND,4,,,4,0,3-pin screw terminal
-OST,OSTVN04A150,Digikey,ED10563-ND,3,,,3,0,4-pin screw terminal
-Phoenix Contact,3025532,Digikey,277-3739-ND,4,,,4,0,Micro terminal block
-Phoenix Contact,FBRN 4-4 N,Digikey,277-3496-ND,1,,,1,0,Terminal block jumper
-PEM,KFSE-440-8,McMaster,92985A110,7,,,7,0,PCB standoff
-,,McMaster,8961K13,1,,,1,0,15 mm DIN rail
-Switchcraft,EN3C2FX,Mouser,502-EN3C2FX,1,,,1,0,Female 2-pin IP67 connector for 5V
-Neutrik,NC3FP-B-1,Mouser,568-NC3FP-B-1,1,,,1,0,Female panel-mount XLR jack for DMX
-PJRC,Teensy 3.2,PJRC,,3,,,3,0,Microcontroller
-PJRC,Audio shield,PJRC,,1,,,1,0,Teensy audio shield
-PJRC,14-pin sockets,PJRC,,2,,,2,0,Header socket for Teensy
-PJRC,WIZ820_SD_ADAPTOR,PJRC,,1,,,1,0,SD card adaptor for Teensy
-,,Amazon,HC-SR501,2,,,2,0,PIR sensor
-Maxbotics,MB7092-Compact,Maxbotics,MB7092-Compact,1,,,1,0,Ultrasonic sensor
+Manufacturer,Manu #,Distributor,Dist #,Qty,Unit price,Extended price,Have,Need for 2 boxes,To order,Description
+Adafruit,1609,Adafruit,1609,3,,,3,6,3,1/2 sized breadboard
+Adafruit,1608,Adafruit,1608,0,,,1,0,-1,1/4 sized breadboard
+Bud Industries,NBX-10990,Amazon,,1,,,1,2,1,Back panel for enclosure
+Sandisk,SDSDQUAN-008G-G4A,Amazon,,2,,,3,4,1,8 GB SD card: http://www.amazon.com/SanDisk-MicroSDHC-Standard-Packaging-SDSDQUAN-008G-G4A/dp/B00M55C0VU/
+,,Amazon,,3,,,3,6,3,Micro USB cable: http://www.amazon.com/Anker-PowerLine-Premium-Motorola-Smartphones/dp/B019PV2I3G/
+Amazonbasics,,Amazon,,1,,,1,2,1,3.5 mm audio cable: www.amazon.com/AmazonBasics-3-5mm-Stereo-Audio-Cable/dp/B00NO73IN2/
+Bud Industries,NBE-10573,Amazon,,1,,,1,2,1,Fiberglass enclosure
+Switchcraft,EN3P3FX,Digikey,SC260-ND,0,,,4,0,-4,Female 3-pin IP67 connector for sensors and audio
+Switchcraft,EN3C3MX,Digikey,SC252-ND,0,,,4,0,-4,Male 3-pin IP67 connector for sensors and audio
+Switchcraft,EN3P2MX,Digikey,SC1568-ND,0,,,1,0,-1,Male 2-pin IP67 connector for 5V
+Bulgin,PX0842/B,Digikey,708-1021-ND,3,,,3,6,3,USB passthrough connector
+Bulgin,PX0733,Digikey,708-1180-ND,3,,,3,6,3,USB connector cap
+Maxim,MAX3072EEPA+,Digikey,MAX3072EEPA+-ND,1,,,5,2,-3,RS-485 transceiver
+OST,OSTVN03A150,Digikey,ED10562-ND,4,,,4,8,4,3-pin screw terminal
+OST,OSTVN04A150,Digikey,ED10563-ND,3,,,3,6,3,4-pin screw terminal
+Phoenix Contact,3025532,Digikey,277-3739-ND,4,,,4,8,4,Micro terminal block
+Phoenix Contact,FBRN 4-4 N,Digikey,277-3496-ND,1,,,1,2,1,Terminal block jumper
+PEM,KFSE-440-8,McMaster,92985A110,7,,,100,14,-86,PCB standoff
+,,McMaster,8961K13,1,,,20,2,-18,15 mm DIN rail
+Switchcraft,EN3C2FX,Mouser,502-EN3C2FX,0,,,1,0,-1,Female 2-pin IP67 connector for 5V
+Neutrik,NC3FP-B-1,Mouser,568-NC3FP-B-1,9,,,1,18,17,"Female panel-mount XLR jack for DMX, sensors, and audio"
+PJRC,Teensy 3.2,PJRC,,3,,,3,6,3,Microcontroller
+PJRC,Audio shield,PJRC,,1,,,1,2,1,Teensy audio shield
+PJRC,14-pin headers,PJRC,,3,,,4,6,2,Header socket for Teensy
+PJRC,WIZ820_SD_ADAPTOR,PJRC,,1,,,1,2,1,SD card adaptor for Teensy
+,,Amazon,HC-SR501,2,,,5,4,-1,PIR sensor
+Maxbotics,MB7092-Compact,Maxbotics,MB7092-Compact,0,,,1,0,-1,Ultrasonic sensor
+Maxbotics,MB7092-Compact,Maxbotics,MB7363,4,,,4,8,4,Ultrasonic sensor
+,,McMaster,8302K13,1,,,0,2,2,IP66 cord grip
+E-Switch,PVL12FL141,Digikey,EG5377-ND,6,,,6,12,6,LED panel indicator
+,,Scrounged,,1,,,2,2,0,AC power cord
+Meanwell,RD-125B,Amazon,,1,,,2,2,0,Dual output power supply (5 V and 24 V)
+Sockitbox,200,Amazon,,1,,,1,2,1,Socket box
+SMSL,SA-50,Amazon,,1,,,1,2,1,Audio amplifier
+Harwin,S8421-45R,Digikey,952-1737-1-ND,1,,,10,2,-8,Coin cell holder
+Citizen,CFS-20632768HZFB,Digikey,300-8763-ND,1,,,10,2,-8,32 kHz crystal for real-time clock
+,,Amazon,,1,,,0,2,2,CR2032 coin cell
+,,,,,,,,0,0,
+,,,,,,,,0,0,
+,,,,,,,,0,0,
+,,,,,,,,0,0,
+,,,,,,,,0,0,
+,,,,,,,,0,0,

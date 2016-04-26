@@ -92,13 +92,13 @@ void setup()
 void loop()
 {
   // Try to sync the real-time clock
-  if (Serial.available()) {
+/*  if (Serial.available()) {
     time_t t = processSyncMessage();
     if (t != 0) {
       Teensy3Clock.set(t); // set the RTC
       setTime(t);
     }
-  }
+  }*/
 
   String dataString = "";
 
@@ -149,5 +149,5 @@ void loop()
   else {
     Serial.println("error opening datalog.txt");
   }
-  delay(1000);
+  delay(5000);
 }

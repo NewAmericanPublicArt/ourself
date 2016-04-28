@@ -20,23 +20,31 @@
  * Redistributed under GPL license in accordance with Bogde's license (GPL)
  * at https://github.com/bogde/HX711/blob/master/LICENSE */
 
-#include <DmxSimple.h>
+#define LED1 2
+#define LED2 3
+#define LED3 4
+#define LED4 5
+#define LED5 6
+#define LED6 7
 
-#define TRUE  1
-#define FALSE 0
+#define PIR1 8
+#define PIR2 9
 
-#define USONIC_THRESHOLD     100
-#define THE_ONLY_BAR_WE_HAVE 1
+#define AUD1 10
+#define AUD2 11
+#define AUD3 12
 
-#define DMX_OUT 6
+#define PWM1 23
+#define PWM2 22
 
-#define PIR_R_OUT  9
-#define USONIC_OUT 10
-#define PIR_L_OUT  11
-
-#define PIR_L_IN  14
-#define USONIC_IN A4
-#define PIR_R_IN  22
+#define CLK1 21
+#define DAT1 20
+#define CLK2 19
+#define DAT2 18
+#define CLK3 17
+#define DAT3 16
+#define CLK4 15
+#define DAT4 14
 
 #define STATE_BASELINE 0
 #define STATE_APPROACH 1
@@ -46,42 +54,42 @@
 #define APPROACH_TIMEOUT 30000
 #define LEAVING_TIMEOUT  30000
 
-#define LOAD_THRESHOLD 300000
+#define WEIGHT_THRESHOLD 300000
 
-// SLOPPY GLOBAL VARS USED FOR LOAD CELL CODE
+// constant needed to set gain of load cell amp
+// from https://github.com/bogde/HX711/blob/master/HX711.cpp#L22
+// Value of 2 means gain of 32.
+#define LOAD_CELL_GAIN_EDGES 2
 
-int PD_SCK  = 22;
-int DOUT    = 14;
-int GAIN = 2; // from set_gain()
+byte clk_table[4] = {CLK1, CLK2, CLK3, CLK4};
+byte dat_table[4] = {DAT1, DAT2, DAT3, DAT4};
 
-void setLightBar(int address, int r, int g, int b) {
-    DmxSimple.write(address, 255);   // master dimmer, 0-255 -> dim-bright
-    DmxSimple.write(address + 1, 0); // flash rate: 0 = no flash, 1-255 -> long-short delay between flashes
-    DmxSimple.write(address + 2, 0); // whether to run some fucked up program. 0-50=no, other numbers run weird shit
-    DmxSimple.write(address + 3, 0); // how fast to fade in weird shit, 0-255 -> slow-fast
-    DmxSimple.write(address + 4, r); // red channel, 0-255 -> dim-bright
-    DmxSimple.write(address + 5, g); // green channel, 0-255 -> dim-bright
-    DmxSimple.write(address + 6, b); // blue channel, 0-255 -> dim-bright
+void setLights(byte brightness) {
+    analogWrite(PWM1, brightness);
+    analogWrite(PWM2, brightness);
 }
 
 int motionDetected(void) {
-    if(digitalRead(PIR_L_IN) | digitalRead(PIR_R_IN)) {
-        return TRUE;
+    if(digitalRead(PIR1) | digitalRead(PIR2)) {
+        return true;
     } else {
-        return TRUE;
-        //return FALSE; // BREAKING THIS FOR TESTING
+        return true;
+        //return false; // BREAKING THIS FOR TESTING
     }
 }
 
 bool personBetweenMirrors() {
     long loadCellReading;
-    loadCellReading = readLoadCell();
-    Serial.println(loadCellReading);
-    if(loadCellReading > LOAD_THRESHOLD) {
-        return TRUE;
-    } else {
-        return FALSE;
+    byte i;
+
+    for(i=0; i<=3; i++) {
+        loadCellReading = readLoadCell(i);
+        Serial.println(loadCellReading);
+        if(loadCellReading > WEIGHT_THRESHOLD) {
+            return true;
+        }
     }
+    return false; // none of the load cell readings were above the threshold
 }
 
 void updateStateMachine(void) {
@@ -95,18 +103,17 @@ void updateStateMachine(void) {
 
     switch(state) {
         case STATE_BASELINE:
-            setLightBar(THE_ONLY_BAR_WE_HAVE, 50, 50, 50); // set edge light to low
-            // set ambient sound to very low
-            digitalWrite(USONIC_OUT, LOW); // stop any story
+            setLights(50); // set edge lights to low
+            // by default, ambient sound will be very low
+            digitalWrite(AUD3, LOW); // stop any story
             if(motionDetected()) {
                 state = STATE_APPROACH;
                 approach_timer = millis();
             }
             break;
         case STATE_APPROACH:
-            // play alert
-            // set ambient sound to high
-            // single pulse of edge light, then down to medium
+            digitalWrite(AUD1, HIGH);
+            // single pulse of edge lights, then down to medium
             if(personBetweenMirrors()) {
                 state = STATE_STORY;
             }/* else if(approach_timer - millis() > APPROACH_TIMEOUT) {
@@ -114,9 +121,9 @@ void updateStateMachine(void) {
             }*/
             break;
         case STATE_STORY:
-            digitalWrite(USONIC_OUT, HIGH); // play start sound, then play next story as long as we're in this state
-            // set ambient sound to low
-            setLightBar(THE_ONLY_BAR_WE_HAVE, 255, 255, 255); // set edge light to high
+            digitalWrite(AUD1, LOW);
+            digitalWrite(AUD2, HIGH);
+            setLights(255); // set edge light to high
             if(!personBetweenMirrors()) {
                 if(motionDetected()) {
                     state = STATE_LEAVING;
@@ -128,10 +135,9 @@ void updateStateMachine(void) {
             }
             break;
         case STATE_LEAVING:
-            // play leaving sound
-            // set ambient sound to high
-            // set edge light to medium
-            // fade story to 0
+            digitalWrite(AUD2, LOW);
+            digitalWrite(AUD3, HIGH);
+            setLights(100); // set edge lights to medium
             if(personBetweenMirrors()) { // ah, they went back in!
                 state = STATE_STORY;
             }
@@ -142,27 +148,32 @@ void updateStateMachine(void) {
     }
 }
 
-bool is_ready() {
-    return digitalRead(DOUT) == LOW;
+bool is_ready(byte dat_pin) {
+    // need to add timeout here
+    return digitalRead(dat_pin) == LOW;
 }
 
-long readLoadCell() {
+long readLoadCell(byte cell) {
+    byte gain_edges = LOAD_CELL_GAIN_EDGES;
+    byte clk = clk_table[cell];
+    byte dat = dat_table[cell];
+
     // wait for the chip to become ready
-    while (!is_ready());
+    while (!is_ready(dat));
 
     unsigned long value = 0;
     byte data[3] = { 0 };
     byte filler = 0x00;
 
     // pulse the clock pin 24 times to read the data
-    data[2] = shiftIn(DOUT, PD_SCK, MSBFIRST);
-    data[1] = shiftIn(DOUT, PD_SCK, MSBFIRST);
-    data[0] = shiftIn(DOUT, PD_SCK, MSBFIRST);
+    data[2] = shiftIn(dat, clk, MSBFIRST);
+    data[1] = shiftIn(dat, clk, MSBFIRST);
+    data[0] = shiftIn(dat, clk, MSBFIRST);
 
     // set the channel and the gain factor for the next reading using the clock pin
-    for (unsigned int i = 0; i < GAIN; i++) {
-        digitalWrite(PD_SCK, HIGH);
-        digitalWrite(PD_SCK, LOW);
+    for (unsigned int i = 0; i < gain_edges; i++) {
+        digitalWrite(clk, HIGH);
+        digitalWrite(clk, LOW);
     }
 
     // Datasheet indicates the value is returned as a two's complement value
@@ -190,24 +201,51 @@ long readLoadCell() {
     return static_cast<long>(++value);
 }
 
-void initLoadCell() {
-    pinMode(PD_SCK, OUTPUT);
-    pinMode(DOUT, INPUT);
+void initAudio() {
+    pinMode(AUD1, OUTPUT);
+    pinMode(AUD2, OUTPUT);
+    pinMode(AUD3, OUTPUT);
+}
+
+void initLEDs() {
+    pinMode(LED1, OUTPUT);
+    pinMode(LED2, OUTPUT);
+    pinMode(LED3, OUTPUT);
+    pinMode(LED4, OUTPUT);
+    pinMode(LED5, OUTPUT);
+    pinMode(LED6, OUTPUT);
+}
+
+void initLights() {
+    pinMode(PWM1, OUTPUT);
+    pinMode(PWM2, OUTPUT);
+}
+
+void initSensors() {
+    pinMode(PIR1, INPUT);
+    pinMode(PIR2, INPUT);
+
+    pinMode(CLK1, OUTPUT);
+    pinMode(DAT1, INPUT);
+    pinMode(CLK2, OUTPUT);
+    pinMode(DAT2, INPUT);
+    pinMode(CLK3, OUTPUT);
+    pinMode(DAT3, INPUT);
+    pinMode(CLK4, OUTPUT);
+    pinMode(DAT4, INPUT);
     // act as if gain is 32
-    digitalWrite(PD_SCK, LOW); // from set_gain()
+    digitalWrite(CLK1, LOW); // from set_gain()
+    digitalWrite(CLK2, LOW);
+    digitalWrite(CLK3, LOW);
+    digitalWrite(CLK4, LOW);
 }
 
 void setup() {
-    pinMode(DMX_OUT, OUTPUT);    // send DMX
-    pinMode(PIR_R_OUT, OUTPUT);  // announce PIR R signal
-    pinMode(USONIC_OUT, OUTPUT); // announce USONIC signal
-    pinMode(PIR_L_OUT, OUTPUT);  // announce PIR L signal
-//    pinMode(PIR_L_IN, INPUT);    // read PIR L
-//    pinMode(PIR_R_IN, INPUT);    // read PIR R
     Serial.begin(115200);
-    DmxSimple.usePin(6);
-    DmxSimple.maxChannel(100);
-    initLoadCell();
+    initAudio();
+    initLEDs();
+    initLights();
+    initSensors();
 }
 
 void loop() {

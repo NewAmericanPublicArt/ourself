@@ -54,12 +54,12 @@
 #define APPROACH_TIMEOUT 30000
 #define LEAVING_TIMEOUT  30000
 
-#define WEIGHT_THRESHOLD 300000
+#define WEIGHT_THRESHOLD -300000
 
 // constant needed to set gain of load cell amp
 // from https://github.com/bogde/HX711/blob/master/HX711.cpp#L22
 // Value of 2 means gain of 32.
-#define LOAD_CELL_GAIN_EDGES 2
+#define LOAD_CELL_GAIN_EDGES 3
 
 byte clk_table[4] = {CLK1, CLK2, CLK3, CLK4};
 byte dat_table[4] = {DAT1, DAT2, DAT3, DAT4};
@@ -85,7 +85,7 @@ bool personBetweenMirrors() {
     for(i=0; i<=3; i++) {
         loadCellReading = readLoadCell(i);
         Serial.println(loadCellReading);
-        if(loadCellReading > WEIGHT_THRESHOLD) {
+        if(loadCellReading < WEIGHT_THRESHOLD) {
             return true;
         }
     }

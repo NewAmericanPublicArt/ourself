@@ -40,62 +40,74 @@ AudioConnection          patchCord8(mixer2, 0, i2s1, 1);
 AudioControlSGTL5000     sgtl5000_1;     //xy=245,438
 // GUItool: end automatically generated code
 
+char *filenames[] = {"01.wav", "02.wav", "03.wav", "04.wav", "05.wav", "06.wav", "07.wav", "08.wav", "09.wav", "10.wav",
+                      "11.wav", "12.wav", "13.wav", "14.wav", "15.wav", "16.wav", "17.wav", "18.wav", "19.wav", "20.wav",
+                      "21.wav", "22.wav", "23.wav", "24.wav", "25.wav", "26.wav", "27.wav", "28.wav", "29.wav", "30.wav",
+                      "31.wav"};
 
 void setup() {
-  Serial.begin(9600);
-  AudioMemory(8);
-  sgtl5000_1.enable();
-  sgtl5000_1.volume(1.0);
-  SPI.setMOSI(7);
-  SPI.setSCK(14);
-  if (!(SD.begin(10))) {
-    while (1) {
-      Serial.println("Unable to access the SD card");
-      delay(500);
+    randomSeed(4);
+    Serial.begin(9600);
+    AudioMemory(8);
+    sgtl5000_1.enable();
+    sgtl5000_1.volume(1.0);
+    SPI.setMOSI(7);
+    SPI.setSCK(14);
+    if (!(SD.begin(10))) {
+        while (1) { // This is ridiculous; should retry card
+            Serial.println("Unable to access the SD card");
+            delay(500);
+        }
     }
-  }
-  pinMode(13, OUTPUT); // LED on pin 13
-  pinMode(1, INPUT);   // sensor on pin 1
-  mixer1.gain(0, 0.5);
-  mixer1.gain(1, 0.5);
-  mixer2.gain(0, 0.5);
-  mixer2.gain(1, 0.5);
-  delay(1000);
+    pinMode(13, OUTPUT); // LED on pin 13
+    pinMode(1, INPUT);   // sensor on pin 1
+    mixer1.gain(0, 0.5);
+    mixer1.gain(1, 0.5);
+    mixer2.gain(0, 0.5);
+    mixer2.gain(1, 0.5);
+    delay(1000);
 }
 
 void loop() {
-  if (playSdWav1.isPlaying() == false) {
-    Serial.println("Start playing background atmosphere");
-    playSdWav1.play("atmos.wav");
-    delay(10); // wait for library to parse WAV info
-  }
-/*  if (playSdWav2.isPlaying() == false) {
-    Serial.println("Start playing 2");
-    playSdWav2.play("rocket.wav");
-    delay(10); // wait for library to parse WAV info
-  } */
+    static signed int i = -1;
 
-  float loud = 0.8;
-  float quiet = 1.0 - loud;
+    if (playSdWav1.isPlaying() == false) {
+        Serial.println("Start playing background atmosphere");
+        playSdWav1.play("atmos.wav");
+        delay(10); // wait for library to parse WAV info
+    }
 
-  if(digitalRead(1)) { // if a person is detected . . .
-    mixer1.gain(0, quiet);
-    mixer1.gain(2, loud);
-    mixer2.gain(0, quiet);
-    mixer2.gain(2, loud);
-    if (playSdWav3.isPlaying() == false) {
-      Serial.println("Start playing interviews");
-      playSdWav3.play("01.wav");
-      delay(10); // wait for library to parse WAV info
+    float loud = 0.8;
+    float quiet = 1.0 - loud;
+
+    if(digitalRead(1)) { // if a person is detected . . .
+        mixer1.gain(0, quiet);
+        mixer1.gain(2, loud);
+        mixer2.gain(0, quiet);
+        mixer2.gain(2, loud);
+        if(playSdWav3.isPlaying() == false) {
+            i++; // one song ended, so move to the next one
+            if(i > 30) {
+                i = 0; // start over if we reach the end of the list
+            }
+            Serial.println("Play bell");
+            playSdWav2.play("bell.wav");
+            delay(2000);
+            Serial.println("Start playing interviews");
+            Serial.print("Tried to play: ");
+            Serial.print(filenames[i]);
+            Serial.print("\n");
+            playSdWav3.play(filenames[i]);
+            delay(10); // wait for library to parse WAV info
+        }
+    } else {
+        if(playSdWav3.isPlaying() == true) {
+            Serial.println("Stop interviews");
+            playSdWav3.stop();
+        }
+        mixer1.gain(0, loud);
+        mixer1.gain(2, quiet);
+        mixer2.gain(0, loud);
+        mixer2.gain(2, quiet);
     }
-  } else {
-    if (playSdWav3.isPlaying() == true) {
-      Serial.println("Stop interviews");
-      playSdWav3.stop();
-    }
-    mixer1.gain(0, loud);
-    mixer1.gain(2, quiet);
-    mixer2.gain(0, loud);
-    mixer2.gain(2, quiet);
-  }
 }

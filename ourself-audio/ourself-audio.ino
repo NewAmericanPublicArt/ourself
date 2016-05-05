@@ -60,7 +60,7 @@ void setup() {
         }
     }
     pinMode(13, OUTPUT); // LED on pin 13
-    pinMode(1, INPUT);   // sensor on pin 1
+    pinMode(4, INPUT);   // sensor on pin 1
     mixer1.gain(0, 0.5);
     mixer1.gain(1, 0.5);
     mixer2.gain(0, 0.5);
@@ -80,7 +80,7 @@ void loop() {
     float loud = 0.8;
     float quiet = 1.0 - loud;
 
-    if(digitalRead(1)) { // if a person is detected . . .
+    if(digitalRead(4)) { // if a person is detected . . .
         mixer1.gain(0, quiet);
         mixer1.gain(2, loud);
         mixer2.gain(0, quiet);

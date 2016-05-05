@@ -64,6 +64,14 @@
 byte clk_table[4] = {CLK1, CLK2, CLK3, CLK4};
 byte dat_table[4] = {DAT1, DAT2, DAT3, DAT4};
 
+bool load_cell_one   = false;
+bool load_cell_two   = false;
+bool load_cell_three = false;
+bool load_cell_four  = false;
+
+bool motion_sensor_one = false;
+bool motion_sensor_two = false;
+
 void setLights(byte brightness) {
     analogWrite(PWM1, brightness);
     analogWrite(PWM2, brightness);
@@ -79,15 +87,8 @@ int motionDetected(void) {
 }
 
 bool personBetweenMirrors() {
-    long loadCellReading;
-    byte i;
-
-    for(i=0; i<=3; i++) {
-        loadCellReading = readLoadCell(i);
-        Serial.println(loadCellReading);
-        if(loadCellReading < WEIGHT_THRESHOLD) {
-            return true;
-        }
+    if(load_cell_one || load_cell_two || load_cell_three || load_cell_four) {
+        return true;
     }
     return false; // none of the load cell readings were above the threshold
 }
@@ -201,6 +202,65 @@ long readLoadCell(byte cell) {
     return static_cast<long>(++value);
 }
 
+bool checkLoadCellAgainstThreshold(byte cell) {
+    long loadCellReading;
+
+    loadCellReading = readLoadCell(cell);
+    Serial.print("Load cell ");
+    Serial.print(cell);
+    Serial.print(": ");
+    Serial.print(loadCellReading);
+    Serial.print("\n");
+    if(loadCellReading < WEIGHT_THRESHOLD) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void checkSensors() {
+    load_cell_one   = checkLoadCellAgainstThreshold(0);
+    load_cell_two   = checkLoadCellAgainstThreshold(1);
+    load_cell_three = checkLoadCellAgainstThreshold(2);
+    load_cell_four  = checkLoadCellAgainstThreshold(3);
+
+    motion_sensor_one = digitalRead(PIR1);
+    motion_sensor_two = digitalRead(PIR2);
+}
+
+void updateLEDs() {
+    if(load_cell_one == true) {
+        digitalWrite(LED1, HIGH);
+    } else {
+        digitalWrite(LED1, LOW);
+    }
+    if(load_cell_two == true) {
+        digitalWrite(LED2, HIGH);
+    } else {
+        digitalWrite(LED2, LOW);
+    }
+    if(load_cell_three == true) {
+        digitalWrite(LED3, HIGH);
+    } else {
+        digitalWrite(LED3, LOW);
+    }
+    if(load_cell_four == true) {
+        digitalWrite(LED4, HIGH);
+    } else {
+        digitalWrite(LED4, LOW);
+    }
+    if(motion_sensor_one == true) {
+        digitalWrite(LED5, HIGH);
+    } else {
+        digitalWrite(LED5, LOW);
+    }
+    if(motion_sensor_two == true) {
+        digitalWrite(LED6, HIGH);
+    } else {
+        digitalWrite(LED6, LOW);
+    }
+}
+
 void initAudio() {
     pinMode(AUD1, OUTPUT);
     pinMode(AUD2, OUTPUT);
@@ -250,4 +310,6 @@ void setup() {
 
 void loop() {
     updateStateMachine();
+    checkSensors();
+    updateLEDs();
 }

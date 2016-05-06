@@ -81,8 +81,7 @@ int motionDetected(void) {
     if(digitalRead(PIR1) | digitalRead(PIR2)) {
         return true;
     } else {
-        return true;
-        //return false; // BREAKING THIS FOR TESTING
+        return false;
     }
 }
 
@@ -104,22 +103,25 @@ void updateStateMachine(void) {
 
     switch(state) {
         case STATE_BASELINE:
-            setLights(50); // set edge lights to low
+            setLights(25); // set edge lights to low
             // by default, ambient sound will be very low
             digitalWrite(AUD3, LOW); // stop any story
             if(motionDetected()) {
                 state = STATE_APPROACH;
+                // single pulse of edge lights on state transition, then down to medium
+                setLights(150);
+                delay(500);
+                setLights(100);
                 approach_timer = millis();
             }
             break;
         case STATE_APPROACH:
             digitalWrite(AUD1, HIGH);
-            // single pulse of edge lights, then down to medium
             if(personBetweenMirrors()) {
                 state = STATE_STORY;
-            }/* else if(approach_timer - millis() > APPROACH_TIMEOUT) {
+            } else if(!motionDetected()) {
                 state = STATE_BASELINE;
-            }*/
+            }
             break;
         case STATE_STORY:
             digitalWrite(AUD1, LOW);

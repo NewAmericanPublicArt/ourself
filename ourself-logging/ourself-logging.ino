@@ -138,18 +138,18 @@ void loop()
         dataString += "Z,";
 
         if(digitalRead(MOTION1)) {
-            dataString += "M1,";
+            dataString += "ARR,";
         } else {
             dataString += ",";
         }
 
         if(digitalRead(LOADCELLS)) {
-            dataString += "LC,";
+            dataString += "OCC,";
         } else {
             dataString += ",";
         }
         if(digitalRead(MOTION2)) {
-            dataString += "M2";
+            dataString += "DEP";
         }
 
         File dataFile = SD.open("datalog.txt", FILE_WRITE);

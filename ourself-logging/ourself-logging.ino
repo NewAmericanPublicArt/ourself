@@ -22,6 +22,10 @@
 
 #define TIME_HEADER  "T"   // Header tag for serial time sync message
 
+#define MOTION1   14
+#define LOADCELLS 15
+#define MOTION2   16
+
 time_t getTeensy3Time()
 {
   return Teensy3Clock.get();
@@ -67,31 +71,34 @@ const int chipSelect = 4;
 
 void setup()
 {
-  Serial.begin(115200);
-  while (!Serial);  // Wait for Arduino Serial Monitor to open
+    Serial.begin(115200);
+    while (!Serial);  // Wait for Arduino Serial Monitor to open
 
-  // Set up SD card
-  Serial.print("Initializing SD card...");
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    // don't do anything more:
-    return;
-  }
-  Serial.println("card initialized.");
+    // Set up SD card
+    Serial.print("Initializing SD card...");
+    if (!SD.begin(chipSelect)) {
+        Serial.println("Card failed, or not present");
+        // don't do anything more:
+        return;
+    }
+    Serial.println("card initialized.");
 
-  // Set up real-time clock
-  setSyncProvider(getTeensy3Time);
-  delay(100);
-  if (timeStatus()!= timeSet) {
-    Serial.println("Unable to sync with the RTC");
-  } else {
-    Serial.println("RTC has set the system time");
-  }
+    // Set up real-time clock
+    setSyncProvider(getTeensy3Time);
+    delay(100);
+    if (timeStatus()!= timeSet) {
+        Serial.println("Unable to sync with the RTC");
+    } else {
+        Serial.println("RTC has set the system time");
+    }
+    pinMode(MOTION1, INPUT);
+    pinMode(LOADCELLS, INPUT);
+    pinMode(MOTION2, INPUT);
 }
 
 void loop()
 {
-  // Try to sync the real-time clock
+    // Try to sync the real-time clock
 /*  if (Serial.available()) {
     time_t t = processSyncMessage();
     if (t != 0) {
@@ -99,55 +106,64 @@ void loop()
       setTime(t);
     }
   }*/
+    String dataString = "";
 
-  String dataString = "";
+    if(digitalRead(MOTION1) || digitalRead(LOADCELLS) || digitalRead(MOTION2)) {
+        dataString += String(year());
+        dataString += "-";
+        if(month() < 10) {
+            dataString += "0";
+        }
+        dataString += String(month());
+        dataString += "-";
+        if(day() < 10) {
+            dataString += "0";
+        }
+        dataString += String(day());
+        dataString += "T";
+        if(hour() < 10) {
+            dataString += "0";
+        }
+        dataString += String(hour());
+        dataString += ":";
+        if(minute() < 10) {
+            dataString += "0";
+        }
+        dataString += String(minute());
+        dataString += ":";
+        if(second() < 10) {
+            dataString += "0";
+        }
+        dataString += String(second());
+        dataString += "Z,";
 
-  dataString += String(year());
-  dataString += "-";
-  if(month() < 10) {
-    dataString += "0";
-  }
-  dataString += String(month());
-  dataString += "-";
-  if(day() < 10) {
-    dataString += "0";
-  }
-  dataString += String(day());
-  dataString += "T";
-  if(hour() < 10) {
-    dataString += "0";
-  }
-  dataString += String(hour());
-  dataString += ":";
-  if(minute() < 10) {
-    dataString += "0";
-  }
-  dataString += String(minute());
-  dataString += ":";
-  if(second() < 10) {
-    dataString += "0";
-  }
-  dataString += String(second());
-  dataString += "Z,";
+        if(digitalRead(MOTION1)) {
+            dataString += "M1,";
+        } else {
+            dataString += ",";
+        }
 
-  // read three sensors and append to the string:
-  for (int analogPin = 0; analogPin < 3; analogPin++) {
-    int sensor = analogRead(analogPin);
-    dataString += String(sensor);
-    if (analogPin < 2) {
-      dataString += ",";
+        if(digitalRead(LOADCELLS)) {
+            dataString += "LC,";
+        } else {
+            dataString += ",";
+        }
+        if(digitalRead(MOTION2)) {
+            dataString += "M2";
+        }
+
+        File dataFile = SD.open("datalog.txt", FILE_WRITE);
+
+        if (dataFile) {
+            dataFile.println(dataString);
+            dataFile.close();
+            Serial.println(dataString);
+        }
+        else {
+            Serial.println("error opening datalog.txt");
+        }
+        delay(1000); // delay so we can't write more than once per second
+        // max entry size is 27 bytes
+        // 27 bytes * 15 million seconds per 6 months is 405 MB. We have an 8 GB card.
     }
-  }
-
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
-
-  if (dataFile) {
-    dataFile.println(dataString);
-    dataFile.close();
-    Serial.println(dataString);
-  }
-  else {
-    Serial.println("error opening datalog.txt");
-  }
-  delay(5000);
 }

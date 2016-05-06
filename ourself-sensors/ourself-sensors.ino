@@ -78,7 +78,7 @@ void setLights(byte brightness) {
 }
 
 int motionDetected(void) {
-    if(digitalRead(PIR1) | digitalRead(PIR2)) {
+    if(motion_sensor_one || motion_sensor_two) {
         return true;
     } else {
         return false;
@@ -105,7 +105,9 @@ void updateStateMachine(void) {
         case STATE_BASELINE:
             setLights(25); // set edge lights to low
             // by default, ambient sound will be very low
-            digitalWrite(AUD3, LOW); // stop any story
+            digitalWrite(AUD1, LOW);
+            digitalWrite(AUD2, LOW);
+            digitalWrite(AUD3, LOW);
             if(motionDetected()) {
                 state = STATE_APPROACH;
                 // single pulse of edge lights on state transition, then down to medium
@@ -117,6 +119,8 @@ void updateStateMachine(void) {
             break;
         case STATE_APPROACH:
             digitalWrite(AUD1, HIGH);
+            digitalWrite(AUD2, LOW);
+            digitalWrite(AUD3, LOW);
             if(personBetweenMirrors()) {
                 state = STATE_STORY;
             } else if(!motionDetected()) {
@@ -126,6 +130,7 @@ void updateStateMachine(void) {
         case STATE_STORY:
             digitalWrite(AUD1, LOW);
             digitalWrite(AUD2, HIGH);
+            digitalWrite(AUD3, LOW);
             setLights(255); // set edge light to high
             if(!personBetweenMirrors()) {
                 if(motionDetected()) {
@@ -138,13 +143,14 @@ void updateStateMachine(void) {
             }
             break;
         case STATE_LEAVING:
+            digitalWrite(AUD1, LOW);
             digitalWrite(AUD2, LOW);
             digitalWrite(AUD3, HIGH);
             setLights(100); // set edge lights to medium
             if(personBetweenMirrors()) { // ah, they went back in!
                 state = STATE_STORY;
             }
-            if(leaving_timer - millis() > LEAVING_TIMEOUT) {
+            if(!motionDetected()) { // may also want a timeout in here
                 state = STATE_BASELINE;
             }
             break;

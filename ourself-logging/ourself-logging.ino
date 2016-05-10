@@ -26,53 +26,31 @@
 #define LOADCELLS 15
 #define MOTION2   16
 
-time_t getTeensy3Time()
-{
-  return Teensy3Clock.get();
+const int chipSelect = 4; // for SD card
+
+time_t getTeensy3Time() {
+    return Teensy3Clock.get();
 }
 
 unsigned long processSyncMessage() {
-  unsigned long pctime = 0L;
-  const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
+    unsigned long pctime = 0L;
+    const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 
-  if(Serial.find(TIME_HEADER)) {
-     pctime = Serial.parseInt();
-     return pctime;
-     if( pctime < DEFAULT_TIME) { // check the value is a valid time (greater than Jan 1 2013)
-       pctime = 0L; // return 0 to indicate that the time is not valid
-     }
-  }
-  return pctime;
+    if(Serial.find(TIME_HEADER)) { // Feel free to ignore the compiler warning:
+                                   // "warning: deprecated conversion from string constant to 'char*'"
+                                   // The fix means changing the Arduino serial library code. Doesn't affect us.
+        pctime = Serial.parseInt();
+        return pctime;
+        if( pctime < DEFAULT_TIME) { // check the value is a valid time (greater than Jan 1 2013)
+            pctime = 0L; // return 0 to indicate that the time is not valid
+        }
+    }
+    return pctime;
 }
-
-/* The circuit:
- * analog sensors on analog ins 0, 1, and 2
- * SD card attached to SPI bus as follows:
- ** MOSI - pin 11
- ** MISO - pin 12
- ** CLK - pin 13
- ** CS - pin 4
- */
-
-// On the Ethernet Shield, CS is pin 4. Note that even if it's not
-// used as the CS pin, the hardware CS pin (10 on most Arduino boards,
-// 53 on the Mega) must be left as an output or the SD library
-// functions will not work.
-
-// change this to match your SD shield or module;
-// Arduino Ethernet shield: pin 4
-// Adafruit SD shields and modules: pin 10
-// Sparkfun SD shield: pin 8
-// Teensy audio board: pin 10
-// Wiz820+SD board: pin 4
-// Teensy 2.0: pin 0
-// Teensy++ 2.0: pin 20
-const int chipSelect = 4;
 
 void setup()
 {
     Serial.begin(115200);
-    while (!Serial);  // Wait for Arduino Serial Monitor to open
 
     // Set up SD card
     Serial.print("Initializing SD card...");
@@ -99,13 +77,16 @@ void setup()
 void loop()
 {
     // Try to sync the real-time clock
-/*  if (Serial.available()) {
-    time_t t = processSyncMessage();
-    if (t != 0) {
-      Teensy3Clock.set(t); // set the RTC
-      setTime(t);
+    // To send sync message from OS X or Linux, use this in Terminal:
+    // date +T%s > /dev/cu.usbmodem1673631
+    // Will probably have to change /dev/cu.usbmodemXXXXXXX to match Arduino > Tools > Port
+    if (Serial.available()) {
+        time_t t = processSyncMessage();
+        if (t != 0) {
+            Teensy3Clock.set(t); // set the RTC
+            setTime(t);
+        }
     }
-  }*/
     String dataString = "";
 
     if(digitalRead(MOTION1) || digitalRead(LOADCELLS) || digitalRead(MOTION2)) {

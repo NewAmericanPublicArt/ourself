@@ -51,8 +51,8 @@
 #define STATE_STORY    2
 #define STATE_LEAVING  3
 
-#define APPROACH_TIMEOUT 30000
-#define LEAVING_TIMEOUT  30000
+#define CUBIC_EASING_DURATION_IN_MS 2000
+#define CUBIC 3
 
 #define WEIGHT_THRESHOLD -300000
 
@@ -72,9 +72,38 @@ bool load_cell_four  = false;
 bool motion_sensor_one = false;
 bool motion_sensor_two = false;
 
-void setLights(byte brightness) {
-    analogWrite(PWM1, brightness);
-    analogWrite(PWM2, brightness);
+byte lights_target = 25;
+byte lights_at_trigger = 25;
+byte current_brightness = 25;
+unsigned long millis_at_trigger;
+
+void setLightsTarget(byte target_brightness) {
+    lights_target = target_brightness;
+    lights_at_trigger = current_brightness;
+    millis_at_trigger = millis();
+}
+
+float easing(int mode, float ms_since_trigger) {
+    float b = lights_at_trigger;
+    float c = lights_target - lights_at_trigger;
+    float d = CUBIC_EASING_DURATION_IN_MS;
+    float t = 0;
+    float easing = 0;
+    if(mode == CUBIC) {
+        t = (ms_since_trigger/d) - 1; // scale time from [0-duration] to [-1 to 0]
+        easing = c*t*t*t + c + b;
+        return easing;
+    } else {
+        Serial.println("Easing mode not set right.\n");
+        return 0.0;
+    }
+}
+
+void updateLightStrips(void) {
+    byte e = (byte) easing(CUBIC, millis() - millis_at_trigger);
+    analogWrite(PWM1, e);
+    analogWrite(PWM2, e);
+    current_brightness = e;
 }
 
 int motionDetected(void) {
@@ -101,20 +130,17 @@ void updateStateMachine(void) {
 
     switch(state) {
         case STATE_BASELINE:
-            setLights(25); // set edge lights to low
+            setLightsTarget(25); // set edge lights to low
             // by default, ambient sound will be very low
             digitalWrite(AUD1, LOW);
             digitalWrite(AUD2, LOW);
             digitalWrite(AUD3, LOW);
-            if(motionDetected()) {
+            if(motionDetected() || personBetweenMirrors()) {
                 state = STATE_APPROACH;
-                // single pulse of edge lights on state transition, then down to medium
-                setLights(150);
-                delay(500);
-                setLights(100);
             }
             break;
         case STATE_APPROACH:
+            setLightsTarget(100);
             digitalWrite(AUD1, HIGH);
             digitalWrite(AUD2, LOW);
             digitalWrite(AUD3, LOW);
@@ -128,7 +154,7 @@ void updateStateMachine(void) {
             digitalWrite(AUD1, LOW);
             digitalWrite(AUD2, HIGH);
             digitalWrite(AUD3, LOW);
-            setLights(255); // set edge light to high
+            setLightsTarget(255); // set edge light to high
             if(!personBetweenMirrors()) {
                 if(motionDetected()) {
                     state = STATE_LEAVING;
@@ -142,7 +168,7 @@ void updateStateMachine(void) {
             digitalWrite(AUD1, LOW);
             digitalWrite(AUD2, LOW);
             digitalWrite(AUD3, HIGH);
-            setLights(100); // set edge lights to medium
+            setLightsTarget(100); // set edge lights to medium
             if(personBetweenMirrors()) { // ah, they went back in!
                 state = STATE_STORY;
             }
@@ -232,7 +258,7 @@ void checkSensors() {
     motion_sensor_two = digitalRead(PIR2);
 }
 
-void updateLEDs() {
+void updateStatusLEDs() {
     if(load_cell_one == true) {
         digitalWrite(LED1, HIGH);
     } else {
@@ -315,5 +341,6 @@ void setup() {
 void loop() {
     updateStateMachine();
     checkSensors();
-    updateLEDs();
+    updateStatusLEDs();
+    updateLightStrips();
 }

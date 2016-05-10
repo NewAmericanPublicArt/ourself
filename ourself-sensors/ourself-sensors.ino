@@ -94,8 +94,6 @@ bool personBetweenMirrors() {
 
 void updateStateMachine(void) {
     static int state = STATE_BASELINE;
-    static unsigned long approach_timer;
-    static unsigned long leaving_timer;
 
     Serial.print("STATE: ");
     Serial.print(state);
@@ -114,7 +112,6 @@ void updateStateMachine(void) {
                 setLights(150);
                 delay(500);
                 setLights(100);
-                approach_timer = millis();
             }
             break;
         case STATE_APPROACH:
@@ -135,7 +132,6 @@ void updateStateMachine(void) {
             if(!personBetweenMirrors()) {
                 if(motionDetected()) {
                     state = STATE_LEAVING;
-                    leaving_timer = millis();
                 } else {
                     // need a timeout in here?
                     state = STATE_BASELINE; // this is the case where the person vanished without tripping the PIR

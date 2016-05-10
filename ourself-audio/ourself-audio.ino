@@ -22,6 +22,10 @@
 #include <SD.h>
 #include <SerialFlash.h>
 
+#define ARRIVAL_TRIGGER       3
+#define LOAD_CELL_TRIGGER_PIN 4
+#define DEPARTURE_TRIGGER     5
+
 // GUItool: begin automatically generated code
 AudioPlaySdWav           playSdWav3;     //xy=172,354
 AudioPlaySdWav           playSdWav1;     //xy=174,184
@@ -40,27 +44,26 @@ AudioConnection          patchCord8(mixer2, 0, i2s1, 1);
 AudioControlSGTL5000     sgtl5000_1;     //xy=245,438
 // GUItool: end automatically generated code
 
-char *filenames[] = {"01.wav", "02.wav", "03.wav", "04.wav", "05.wav", "06.wav", "07.wav", "08.wav", "09.wav", "10.wav",
+const char *filenames[] = {"01.wav", "02.wav", "03.wav", "04.wav", "05.wav", "06.wav", "07.wav", "08.wav", "09.wav", "10.wav",
                       "11.wav", "12.wav", "13.wav", "14.wav", "15.wav", "16.wav", "17.wav", "18.wav", "19.wav", "20.wav",
                       "21.wav", "22.wav", "23.wav", "24.wav", "25.wav", "26.wav", "27.wav", "28.wav", "29.wav", "30.wav",
                       "31.wav"};
 
 void setup() {
-    randomSeed(4);
-    Serial.begin(9600);
+    Serial.begin(115200);
     AudioMemory(8);
     sgtl5000_1.enable();
-    sgtl5000_1.volume(1.0);
+    sgtl5000_1.lineOutLevel(16); // 16 means 2.67 V peak-to-peak output from audioshield
+                                 // For max volume, change to 13, which is 3.12 V peak-to-peak.
+                                 // More info at https://www.pjrc.com/teensy/gui/?info=AudioControlSGTL5000
     SPI.setMOSI(7);
     SPI.setSCK(14);
-    if (!(SD.begin(10))) {
-        while (1) { // This is ridiculous; should retry card
-            Serial.println("Unable to access the SD card");
-            delay(500);
-        }
+    while(!(SD.begin(10))) {
+        Serial.println("Unable to access the SD card");
+        delay(500);
     }
     pinMode(13, OUTPUT); // LED on pin 13
-    pinMode(4, INPUT);   // sensor on pin 1
+    pinMode(LOAD_CELL_TRIGGER_PIN, INPUT);   // sensor on pin 1
     mixer1.gain(0, 0.5);
     mixer1.gain(1, 0.5);
     mixer2.gain(0, 0.5);
@@ -69,7 +72,7 @@ void setup() {
 }
 
 void loop() {
-    static signed int i = -1;
+    static signed int i = -1; // Start at -1 so first increment is 0, which is where the file array starts.
 
     if (playSdWav1.isPlaying() == false) {
         Serial.println("Start playing background atmosphere");
@@ -77,10 +80,10 @@ void loop() {
         delay(10); // wait for library to parse WAV info
     }
 
-    float loud = 0.8;
-    float quiet = 1.0 - loud;
+    float loud = 1.0;
+    float quiet = 0.2;
 
-    if(digitalRead(4)) { // if a person is detected . . .
+    if(digitalRead(LOAD_CELL_TRIGGER_PIN)) { // if a person is detected . . .
         mixer1.gain(0, quiet);
         mixer1.gain(2, loud);
         mixer2.gain(0, quiet);

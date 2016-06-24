@@ -54,7 +54,7 @@
 #define CUBIC_EASING_DURATION_IN_MS 2000
 #define CUBIC 3
 
-#define WEIGHT_THRESHOLD -300000
+#define WEIGHT_THRESHOLD -200000
 
 // constant needed to set gain of load cell amp
 // from https://github.com/bogde/HX711/blob/master/HX711.cpp#L22

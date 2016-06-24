@@ -53,7 +53,7 @@ void setup() {
     Serial.begin(115200);
     AudioMemory(8);
     sgtl5000_1.enable();
-    sgtl5000_1.lineOutLevel(16); // 16 means 2.67 V peak-to-peak output from audioshield
+    sgtl5000_1.lineOutLevel(13); // 16 means 2.67 V peak-to-peak output from audioshield
                                  // For max volume, change to 13, which is 3.12 V peak-to-peak.
                                  // More info at https://www.pjrc.com/teensy/gui/?info=AudioControlSGTL5000
     SPI.setMOSI(7);
